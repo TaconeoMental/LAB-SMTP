@@ -1,0 +1,23 @@
+$ORIGIN accela.wired.
+$TTL    1h
+@               IN              SOA     dns.accela.wired. root.accela.wired. (
+                                1       ; Serial
+                                604800  ; Refresh
+                                86400   ; Retry
+                                2419200 ; Expire
+                                1h )    ; Negative Cache TTL
+;
+; NS
+@               IN              NS    dns
+; A
+dns             IN              A     172.22.0.1
+mail            IN              A     172.22.0.10
+shared          IN              A     172.22.0.20
+permissive      IN              A     172.22.0.21
+syntax          IN              A     172.22.0.22
+; MX
+permissive      IN              MX    10    mail
+; TXT
+shared          IN              TXT   "v=spf1 a mx include:local.accela.wired -all"
+permissive      IN              TXT   "v=spf1 ip4:172.0.0.0/8 -all"
+syntax          IN              TXT   "v=spf1 a ip6:mx -all"
