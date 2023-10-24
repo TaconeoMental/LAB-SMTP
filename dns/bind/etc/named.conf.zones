@@ -1,9 +1,0 @@
-zone "localhost" {
-	type master;
-	file "/etc/bind/db.local";
-};
-
-zone "accela.wired" {
-	type master;
-    file "/etc/bind/db.accela.wired";
-};

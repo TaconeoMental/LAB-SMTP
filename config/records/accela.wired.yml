@@ -1,0 +1,52 @@
+origin: accela.wired.
+ttl: 1h
+
+soa:
+  ns: dns.accela.wired.
+  user: root.accela.wired.
+
+records:
+  - type: NS
+    value: dns.accela.wired.
+
+  - type: A
+    host: "@"
+    value: 172.22.0.5
+
+  - type: A
+    host: dns.accela.wired.
+    value: 172.22.0.2
+
+  - type: A
+    host: mail
+    value: 172.22.0.10
+
+  - type: A
+    host: shared
+    value: 172.22.0.20
+
+  - type: A
+    host: permissive
+    value: 172.22.0.21
+
+  - type: A
+    host: syntax
+    value: 172.22.0.22
+
+  - type: MX
+    host: permissive
+    priority: 10
+    value: mail
+
+  - type: TXT
+    host: shared
+    value: "v=spf1 a mx include:local.accela.wired -all"
+
+  - type: TXT
+    host: permissive
+    value: "v=spf1 ip4:172.0.0.0/8 -all"
+
+  - type: TXT
+    host: syntax
+    value: "v=spf1 a ip6:mx -all"
+

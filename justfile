@@ -1,16 +1,29 @@
 # Use with https://github.com/casey/just :)
 set dotenv-load
 
+config_dir := justfile_directory() + "/config"
+bin_dir := justfile_directory() + "/bin"
+volumes_dir := justfile_directory() + "/volumes"
+
 # Build Docker image
-build:
+build: && create-config
+  echo $(id)
   echo "Building Docker image"
-  docker build --tag $MAINTAINER/$PROJECT:$VERSION .
+  docker build --tag $MAINTAINER/$PROJECT:$VERSION ./docker
+
+# Create zone files
+create-config:
+  echo "Creating zone files and BIND9 configuration"
+  {{bin_dir}}/create_zones.py --config-dir {{config_dir}}/records --output-dir {{volumes_dir}}/bind/etc
 
 # Start local lab
-start SUBNET: #build
+start: build
   #!/usr/bin/env bash
-  CIDR_REGEX="(((25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?))(\/([8-9]|[1-2][0-9]|3[0-2]))([^0-9.]|$)"
-  if [[ ! "{{SUBNET}}" =~ $CIDR_REGEX ]]; then echo "{{SUBNET}} is not a valid CIDR range"; fi
+  network=$(cat {{config_dir}}/network.yml | yq '.network')
+  gateway=$(cat {{config_dir}}/network.yml | yq '.gateway')
+  export ADDR_DNS_SERVER=$(cat {{config_dir}}/network.yml | yq -r '.nameserver')
+
+  docker network create --gateway $gateway --subnet $network $DOCKER_NETWORK_NAME
   docker compose --file ./docker-compose.yml up --detach --force-recreate
 
 # Stop local lab
@@ -19,5 +32,7 @@ stop:
 
 # Delete Docker image and container
 purge:
-  docker image rm $MAINTAINER/$PROJECT:$VERSION
-  docker rm --force $CONTAINER_NAME
+  -docker image rm $MAINTAINER/$PROJECT:$VERSION
+  -docker rm --force $BIND9_CONTAINER_NAME
+  -docker network rm $DOCKER_NETWORK_NAME
+  -rm {{volumes_dir}}/bind/etc/{db.*,named.conf.zones}
