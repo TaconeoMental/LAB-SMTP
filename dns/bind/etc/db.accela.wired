@@ -10,7 +10,7 @@ $TTL    1h
 ; NS
 @               IN              NS    dns
 ; A
-dns             IN              A     172.22.0.1
+dns             IN              A     172.22.0.2
 mail            IN              A     172.22.0.10
 shared          IN              A     172.22.0.20
 permissive      IN              A     172.22.0.21

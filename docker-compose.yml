@@ -1,48 +1,12 @@
-version: "3.9"
+version: "3"
 
 services:
   local_dns:
-    image: ubuntu/bind9
-    container_name: lab_dns
-    restart: unless-stopped
-    environment:
-      - BIND9_USER=root
-      - TZ=America/Santiago
-    ports:
-      - "53:7053"
-      - "53:7053/udp"
-    volumes:
-      - ./dns/config:/etc/bind
-      - ./dns/cache:/var/cache/bind:Z
-      - ./dns/records:/var/lib/bind:Z
-    networks:
-      smtp_lab_network:
-        ipv4_address: "${ADDR_DNS_SERVER}"
-  local_mxserver:
-    image: ghcr.io/docker-mailserver/docker-mailserver:latest
-    container_name: lab_mailserver
-    hostname: mail.accela.wired
-    env_file: ./mxserver/mail.env
+    image: "${MAINTAINER}/${PROJECT}:${VERSION}"
+    container_name: "${CONTAINER_NAME}"
     restart: always
     ports:
-      - "25:25"    # SMTP  (explicit TLS => STARTTLS, Authentication is DISABLED => use port 465/587 instead)
-      - "143:143"  # IMAP4 (explicit TLS => STARTTLS)
-      - "465:465"  # ESMTP (implicit TLS)
-      - "587:587"  # ESMTP (explicit TLS => STARTTLS)
-      - "993:993"  # IMAP4 (implicit TLS)
+      - "53:53/tcp"
+      - "53:53/udp"
     volumes:
-      - ./docker-data/dms/mail-data/:/var/mail/
-      - ./docker-data/dms/mail-state/:/var/mail-state/
-      - ./docker-data/dms/mail-logs/:/var/log/mail/
-      - ./docker-data/dms/config/:/tmp/docker-mailserver/
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      smtp_lab_network:
-        ipv4_address: "${ADDR_MX_SERVER_1}"
-    dns:
-      - "${ADDR_DNS_SERVER}"
-
-networks:
-  smtp_lab_network:
-    external: true
-    name: "${DOCKER_NET_NAME}"
+      - ./dns:/data:rw

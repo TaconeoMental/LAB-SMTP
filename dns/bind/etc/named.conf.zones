@@ -5,5 +5,5 @@ zone "localhost" {
 
 zone "accela.wired" {
 	type master;
-	file "/etc/bind/db.accela.wired";
+    file "/etc/bind/db.accela.wired";
 };
