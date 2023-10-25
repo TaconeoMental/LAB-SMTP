@@ -1,38 +1,45 @@
 # Use with https://github.com/casey/just :)
+
+_default:
+    @just --list --unsorted
+
 set dotenv-load
 
-config_dir := justfile_directory() + "/config"
-bin_dir := justfile_directory() + "/bin"
-volumes_dir := justfile_directory() + "/volumes"
+CONFIG := "./config"
+BIN    := "./bin"
+VOLS   := "./volumes"
+
+COMPOSE := "docker compose --file ./docker-compose.yml"
 
 # Build Docker image
 build: && create-config
-  echo $(id)
   echo "Building Docker image"
   docker build --tag $MAINTAINER/$PROJECT:$VERSION ./docker
 
-# Create zone files
-create-config:
+# Create zone files and container network
+create-config: stop
+  #!/usr/bin/env bash
+  set -euo pipefail
+  source {{CONFIG}}/network.conf
+
   echo "Creating zone files and BIND9 configuration"
-  {{bin_dir}}/create_zones.py --config-dir {{config_dir}}/records --output-dir {{volumes_dir}}/bind/etc
+  {{BIN}}/create_zones.py --config-dir {{CONFIG}}/records --output-dir {{VOLS}}/bind/etc
+
+  echo "Creating network"
+  docker network inspect $DOCKER_NETWORK_NAME && docker network rm $DOCKER_NETWORK_NAME
+  docker network create --gateway $LAB_GATEWAY --subnet $LAB_NETWORK $DOCKER_NETWORK_NAME
 
 # Start local lab
 start: build
-  #!/usr/bin/env bash
-  network=$(cat {{config_dir}}/network.yml | yq '.network')
-  gateway=$(cat {{config_dir}}/network.yml | yq '.gateway')
-  export ADDR_DNS_SERVER=$(cat {{config_dir}}/network.yml | yq -r '.nameserver')
-
-  docker network create --gateway $gateway --subnet $network $DOCKER_NETWORK_NAME
-  docker compose --file ./docker-compose.yml up --detach --force-recreate
+  {{COMPOSE}} up --detach --force-recreate
 
 # Stop local lab
 stop:
-  docker compose --file ./docker-compose.yml stop
+  {{COMPOSE}} stop
 
 # Delete Docker image and container
 purge:
   -docker image rm $MAINTAINER/$PROJECT:$VERSION
   -docker rm --force $BIND9_CONTAINER_NAME
   -docker network rm $DOCKER_NETWORK_NAME
-  -rm {{volumes_dir}}/bind/etc/{db.*,named.conf.zones}
+  -rm {{VOLS}}/bind/etc/{db.*,named.conf.zones}
