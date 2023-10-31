@@ -60,7 +60,6 @@ def get_zones(zone_dir):
         }
         yield json_conf["origin"].rstrip("."), zone
 
-
 def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument("-c", "--config-dir", required=True)
@@ -85,5 +84,5 @@ def main():
         content = named_template.render(zones=zones)
         cf.write(content)
 
-
-main()
+if __name__ == "__main__":
+    main()

@@ -37,9 +37,12 @@ start: build
 stop:
   {{COMPOSE}} stop
 
-# Delete Docker image and container
-purge:
-  -docker image rm $MAINTAINER/$PROJECT:$VERSION
+# Delete current instance
+delete:
   -docker rm --force $BIND9_CONTAINER_NAME
   -docker network rm $DOCKER_NETWORK_NAME
   -rm {{VOLS}}/bind/etc/{db.*,named.conf.zones}
+
+# Delete Docker image and container
+purge: && delete
+  -docker image rm $MAINTAINER/$PROJECT:$VERSION
