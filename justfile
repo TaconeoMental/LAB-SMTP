@@ -8,8 +8,9 @@ set dotenv-load
 CONFIG := "./config"
 BIN    := "./bin"
 VOLS   := "./volumes"
+NETWORK_CONF := CONFIG / "network.conf.env"
 
-COMPOSE := "docker compose --file ./docker-compose.yml"
+COMPOSE := "docker compose --env-file " + NETWORK_CONF + " --file ./docker-compose.yml"
 
 # Build Docker image
 build: && create-config
@@ -20,13 +21,13 @@ build: && create-config
 create-config: stop
   #!/usr/bin/env bash
   set -euo pipefail
-  source {{CONFIG}}/network.conf
 
   echo "Creating zone files and BIND9 configuration"
   {{BIN}}/create_zones.py --config-dir {{CONFIG}}/records --output-dir {{VOLS}}/bind/etc
 
   echo "Creating network"
-  docker network inspect $DOCKER_NETWORK_NAME && docker network rm $DOCKER_NETWORK_NAME
+  source {{NETWORK_CONF}}
+  docker network rm --force $DOCKER_NETWORK_NAME
   docker network create --gateway $LAB_GATEWAY --subnet $LAB_NETWORK $DOCKER_NETWORK_NAME
 
 # Start local lab
