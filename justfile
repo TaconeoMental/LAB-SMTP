@@ -5,17 +5,21 @@ _default:
 
 set dotenv-load
 
-CONFIG := "./config"
-BIN    := "./bin"
-VOLS   := "./volumes"
-NETWORK_CONF := CONFIG / "network.conf.env"
+HERE   := justfile_directory()
+CONFIG := HERE / "config"
+BIN    := HERE / "bin"
+VOLS   := HERE / "volumes"
 
-COMPOSE := "docker compose --env-file " + NETWORK_CONF + " --file ./docker-compose.yml"
+NETWORK_CONF := CONFIG / "lab.yml"
+COMPOSE_FILE := HERE / "docker-compose.yml"
+ENV_FILE     := HERE / ".env"
+
+DOCKER_COMPOSE := "docker compose --file " + COMPOSE_FILE
 
 # Build Docker image
 build: && create-config
   echo "Building Docker image"
-  docker build --tag $MAINTAINER/$PROJECT:$VERSION ./docker
+  docker build --tag $MAINTAINER/$PROJECT:$VERSION {{HERE}}/docker
 
 # Create zone files and container network
 create-config: stop
@@ -26,17 +30,23 @@ create-config: stop
   {{BIN}}/create_zones.py --config-dir {{CONFIG}}/records --output-dir {{VOLS}}/bind/etc
 
   echo "Creating network"
-  source {{NETWORK_CONF}}
-  docker network rm --force $DOCKER_NETWORK_NAME
-  docker network create --gateway $LAB_GATEWAY --subnet $LAB_NETWORK $DOCKER_NETWORK_NAME
+  {{BIN}}/create_network.sh --config-file {{NETWORK_CONF}} --network-name $DOCKER_NETWORK_NAME
 
 # Start local lab
 start: build
-  {{COMPOSE}} up --detach --force-recreate
+  {{BIN}}/lab_run.sh \
+    --action start \
+    --compose-file {{COMPOSE_FILE}} \
+    --config-file {{NETWORK_CONF}}
+  #{{DOCKER_COMPOSE}} up --detach --force-recreate
 
 # Stop local lab
 stop:
-  {{COMPOSE}} stop
+  {{BIN}}/lab_run.sh \
+    --action stop \
+    --compose-file {{COMPOSE_FILE}} \
+    --config-file {{NETWORK_CONF}}
+  #{{DOCKER_COMPOSE}} stop
 
 # Delete current instance
 delete:

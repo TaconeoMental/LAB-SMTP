@@ -4,6 +4,7 @@ services:
   local_dns:
     image: "${MAINTAINER}/${PROJECT}:${VERSION}"
     container_name: "${BIND9_CONTAINER_NAME}"
+    env_file: .env
     restart: always
     ports:
       - "53:53/tcp"

@@ -1,0 +1,7 @@
+network: 172.22.0.0/24
+gateway: 172.22.0.1
+nameserver: 172.22.0.2
+
+mailservers:
+  - ip: 172.22.1.1
+    
