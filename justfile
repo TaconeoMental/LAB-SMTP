@@ -38,7 +38,6 @@ start: build
     --action start \
     --compose-file {{COMPOSE_FILE}} \
     --config-file {{NETWORK_CONF}}
-  #{{DOCKER_COMPOSE}} up --detach --force-recreate
 
 # Stop local lab
 stop:
@@ -46,7 +45,6 @@ stop:
     --action stop \
     --compose-file {{COMPOSE_FILE}} \
     --config-file {{NETWORK_CONF}}
-  #{{DOCKER_COMPOSE}} stop
 
 # Delete current instance
 delete:
